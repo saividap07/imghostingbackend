@@ -1,0 +1,59 @@
+public function store_register(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'username' => 'required',
+        'email' => 'required|email',
+        'contact' => 'required',
+        'password' => 'required',
+        'confirm_password' => 'required|same:password',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['status' => 'error', 'message' => 'Validation failed', 'errors' => $validator->errors()], 422);
+    }
+
+    $input = $request->all();
+    $password = $input['password'];
+    $input['password'] = bcrypt($input['password']);
+    $user = User::create($input);
+
+    $user->createEmailVerificationToken();
+
+    $token = $user->createToken('MyAuthApp')->plainTextToken;
+
+    // Generate PDF content
+    $pdfFileName = "details_" . $user->name . ".pdf";
+    $pdfPath = storage_path('app/' . $pdfFileName);
+    PDF::loadView('pdf_template', ['username' => $input['username'], 'email' => $input['email'], 'contact' => $input['contact'], 'password' => $password])->save($pdfPath);
+
+    Mail::send('verification_email', ['user' => $user], function ($message) use ($user, $pdfPath, $pdfFileName) {
+        $message->to($user->email);
+        $message->subject("Verify Your Email");
+        $message->attach($pdfPath, [
+            'as' => $pdfFileName,
+            'mime' => 'application/pdf',
+        ]);
+    });
+
+    unlink($pdfPath);
+
+    return response()->json(['status' => 'success', 'message' => 'User created successfully. Please check your email for verification instructions.', 'token' => $token]);
+}
+
+public function store(Request $request)
+{
+    $username = $request->get('username');
+    $email = $request->get('email');
+    $password = $request->get('password');
+
+    $user = new User([
+        'username' => $username,
+        'email' => $email,
+        'password' => bcrypt($password),
+        'type' => '0', // You can set the default type here if needed.
+        'active' => 0,  // Set the initial active status to 0.
+    ]);
+
+    $user->save();
+    echo "Data Insert";
+}
