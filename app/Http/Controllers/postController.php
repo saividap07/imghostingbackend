@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\user;
 use App\Models\post;
 use App\Models\likes;
+use App\Models\tags;
 use DB;
 
 class postController extends Controller
@@ -16,8 +17,8 @@ class postController extends Controller
     public function index()
     {
         $post=DB::table('posts')
-                ->join('users','posts.userid','=','users.id')
                 ->select('*','posts.id as pid')
+                ->orderBy('posts.id','desc')
                 ->get();
         return response()->json($post);
         
@@ -41,7 +42,7 @@ class postController extends Controller
         $description=$request->get('description');
 
 
-        preg_match_all('/#(\w+)/', $description, $matches);
+        preg_match_all('/#(\w+)/', strtolower($description), $matches);
         // $hashtags = preg_replace('/(#.*\s*)/','',$description);
 
         $hashtags = json_encode($matches[1]);
@@ -74,7 +75,7 @@ class postController extends Controller
         // $imagetemp1=$image1->getClientOriginalName();
         // $image1->move('img',$imagetemp1);
 
-        $views=$request->get('views');
+        // $views=$request->get('views');
 
         $insert=new post([
             'userid'=>$userid,
@@ -83,10 +84,30 @@ class postController extends Controller
             'tags'=>$hashtags,
             'photopath'=>$images,
             // 'thumbnail'=>$images1,
-            'active'=>'0',
-            'views'=>$views
+            'active'=>'0'
         ]);
         $insert->save();
+
+        foreach($matches[1] as $h){
+            $count = tags::where('name','=',$h)->count();
+
+            if($count == 0){
+                $tag = new tags([
+                    'name'=>$h
+                ]);
+
+                $tag->save();
+            }
+
+            else{
+                $total_posts = tags::where('name','=',$h)->first();
+                $total_posts->total_posts += 1;
+
+                $total_posts->update();
+            }
+        }
+
+
         echo "Data Insert";
         
     }
@@ -148,10 +169,17 @@ class postController extends Controller
             ]);
     
             $like->save();    
+
+            $post = post::find($post_id);
+            $post->likes = $post->likes + 1;
+            $post->update();
         }
 
         else{
             $postliked->delete();
+            $post = post::find($post_id);
+            $post->likes = $post->likes - 1;
+            $post->update();
         }
 
         
@@ -186,5 +214,17 @@ class postController extends Controller
 
 
         return response()->json($liked_array);
+    }
+
+
+    public function getPostsForUser($userId)
+    {
+        $userPosts = DB::table('users')
+            ->join('posts', 'users.id', '=', 'posts.userid')
+            ->select('posts.*')
+            ->where('users.id', $userId)
+            ->get();
+
+        return response()->json(['posts' => $userPosts]);
     }
 }

@@ -34,4 +34,10 @@ Route::post('logout',[userController::class,'logout']);
 Route::post('like',[postController::class,'like']);
 Route::post('fetchlikes',[postController::class,'fetchlikes']);
 
+Route::post('addcomment',[commentController::class,'addcomment']);
+Route::post('fetchcomments',[commentController::class,'fetchcomments']);
+
+
+
 Route::get('/verify-email/{token}', [userController::class,'verifyEmail'])->name('email.verify');
+Route::get('getPostsForUser/{userId}',[postController::class,'getPostsForUser']);

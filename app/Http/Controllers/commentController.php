@@ -91,4 +91,34 @@ class commentController extends Controller
         $comment->delete();
         echo "Record Deleted";
     }
+
+
+
+
+    public function addComment(Request $request)
+    {
+        $user_id = $request->get('user_id');
+        $post_id = $request->get('post_id');
+        $text = $request->get('text');
+       
+            $newComment = new Comment([
+                'userid' => $user_id,
+                'postid' => $post_id,
+                'text' => $text,
+            ]);
+
+            $newComment->save();
+    
+            $data['status']='success';
+
+        return response()->json($data);
+    }
+
+    public function fetchcomments(Request $request){
+        $post_id = $request->get('post_id');
+
+        $comments = comment::join('users','comments.userid','=','users.id')->where('postid','=',$post_id)->get();
+
+        return response()->json($comments);
+    }
 }

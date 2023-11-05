@@ -8,6 +8,7 @@
 <body>
     <h3>Your Registration is Completed</h3>
     <p>Dear {{$user->username}},</p>
+    <a href="http://192.168.1.54:8000/api/verifyuser/{{$user->id}}">Click there to verify Email </a>
     <p>Your Registration details below in Attachment</p>
 </body>
 </html>

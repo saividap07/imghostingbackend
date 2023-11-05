@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\user;
 
 use App\Models\Register;
+use App\Models\profile;
 use Illuminate\Support\Facades\Hash;
 use PDF;
 use Illuminate\Support\Facades\Mail;
@@ -28,36 +29,135 @@ class userController extends Controller
 
 
 
-        public function store_register(Request $request)
-        {
-            $validator = Validator::make($request->all(), [
-                'username' => 'required',
-                'email' => 'required|email',
-                'contact' => 'required',
-                'password' => 'required',
-                'confirm_password' => 'required|same:password',
-            ]);
+//         public function store_register(Request $request)
+//         {
+//             $validator = Validator::make($request->all(), [
+//                 'username' => 'required',
+//                 'email' => 'required|email',
+//                 'contact' => 'required',
+//                 'password' => 'required',
+//                 'confirm_password' => 'required|same:password',
+//             ]);
 
-            if ($validator->fails()) {
-                return response()->json(['status' => 'error', 'message' => 'Validation failed', 'errors' => $validator->errors()], 422);
-            }
+//             if ($validator->fails()) {
+//                 return response()->json(['status' => 'error', 'message' => 'Validation failed', 'errors' => $validator->errors()], 422);
+//             }
+//             if (User::where('email', $request->email)->exists()) {
+//                 return response()->json(['error' => 'Email already registered'], 422);
+//             }
 
-            $input = $request->all();
-            $password=$input['password'];
-            $input['password'] = bcrypt($input['password']);
-            $user = User::create($input);
+//             $arr=array();
+//             $input = $request->all();
+//             $password=$input['password'];
+//             $input['password'] = bcrypt($input['password']);
+//             $user = User::create($input);
 
 
-            $token = $user->createToken('MyAuthApp')->plainTextToken;
+//             $success['token'] =  $user->createToken('MyAuthApp')->plainTextToken;
+//             $success['name'] =  $user->name;
+//             $id = User::select('*')->orderBy('id','desc')->first();
+//             $user_id = $id->id;
 
-            // Generate PDF content
-            $pdfFileName = "details_" . $user->name . ".pdf";
-            $pdfPath = storage_path('app/' . $pdfFileName);
-            PDF::loadView('pdf_template', ['username'=>$input['username'],'email'=>$input['email'],'contact'=>$input['contact'],'password'=>$password])->save($pdfPath);
+//             $success['id'] = $user_id;
+//             $profile = new profile([
+//                 'name'=>$request->name,
+//                 'email'=>$request->email,
+//                 'userid'=>$user_id
+//             ]);
 
-            Mail::send('mailsending', ['user' => $user, 'pdfFileName' => $pdfFileName], function ($message) use ($user, $pdfPath, $pdfFileName) {
+//             $profile->save();
+// $success['status']="success";
+//     $success['msg']="User created successfully.";
+//     array_push($arr,$success);
+// //return response()->json($arr);
+        
+
+
+
+//             // Generate PDF content
+//             $pdfFileName = "details_" . $user->name . ".pdf";
+//             $pdfPath = storage_path('app/' . $pdfFileName);
+//             PDF::loadView('pdf_template', ['username'=>$input['username'],'email'=>$input['email'],'contact'=>$input['contact'],'password'=>$password])
+//             ->save($pdfPath);
+
+//             Mail::send('mailsending', ['user' => $user, 'pdfFileName' => $pdfFileName], function ($message) use ($user, $pdfPath, $pdfFileName) {
+//         $message->to($user->email);
+//         $message->subject("Congratulations 🎉 Your Registration Completed");
+
+//         $message->attach($pdfPath, [
+//             'as' => $pdfFileName,
+//             'mime' => 'application/pdf',
+//         ]);
+//     });
+
+
+//             unlink($pdfPath);
+
+//             return response()->json(['status' => 'success', 'message' => 'User created successfully', 'token' => $token,$arr]);
+//         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public function store_register(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'username' => 'required',
+        'email' => 'required|email',
+        'contact' => 'required',
+        'password' => 'required',
+        'confirm_password' => 'required|same:password',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['status' => 'error', 'message' => 'Validation failed', 'errors' => $validator->errors()], 422);
+    }
+
+    if (User::where('email', $request->email)->exists()) {
+        return response()->json(['error' => 'Email already registered'], 407);
+    }
+
+    $input = $request->all();
+    $password = $input['password'];
+    $input['password'] = bcrypt($input['password']);
+    $user = User::create($input);
+
+    $profile = new Profile([
+        'name' => $request->name,
+        'email' => $request->email,
+        'userid' => $user->id,
+    ]);
+
+    $profile->save();
+
+    $token = $user->createToken('MyAuthApp')->plainTextToken;
+
+    // Generate PDF content
+    $pdfFileName = "details_" . $user->name . ".pdf";
+    $pdfPath = storage_path('app/' . $pdfFileName);
+
+    PDF::loadView('pdf_template', [
+        'username' => $input['username'],
+        'email' => $input['email'],
+        'contact' => $input['contact'],
+        'password' => $password,
+    ])->save($pdfPath);
+
+    Mail::send('mailsending', ['user' => $user, 'pdfFileName' => $pdfFileName], function ($message) use ($user, $pdfPath, $pdfFileName) {
         $message->to($user->email);
         $message->subject("Congratulations 🎉 Your Registration Completed");
+
 
         $message->attach($pdfPath, [
             'as' => $pdfFileName,
@@ -65,11 +165,23 @@ class userController extends Controller
         ]);
     });
 
+    unlink($pdfPath);
 
-            unlink($pdfPath);
+    return response()->json(['status' => 'success', 'message' => 'User created successfully', 'token' => $token]);
+}
 
-            return response()->json(['status' => 'success', 'message' => 'User created successfully', 'token' => $token]);
-        }
+
+
+
+
+public function verifyuser($id)
+{
+$user = user::find($id);
+$user->active =1;
+$user->update();
+}
+
+
 
 
 
