@@ -108,12 +108,12 @@ class profileController extends Controller
             $imagetemp1=$image1->getClientOriginalName();
             $image1->move('img',$imagetemp1);
 
-            $update=profile::find($id);
+            $update = Profile::where('userid', $userid)->first();
             $update->userid=$userid;
             $update->name=$name;
             $update->phone=$phone;
-            $update->image=$image;
-            $update->banner=$banner;
+            $update->image=$imagetemp;
+            $update->banner=$imagetemp1;
             $update->address=$address;
             $update->city=$city;
             $update->state=$state;
@@ -124,7 +124,7 @@ class profileController extends Controller
         }
         else if($image!="" && $image1=="")
         {
-            $update=profile::find($id);
+            $update = Profile::where('userid', $userid)->first();
             $update->userid=$userid;
             $update->name=$name;
             $update->phone=$phone;
@@ -139,7 +139,7 @@ class profileController extends Controller
         }
         else if($image==""&&$image1!="")
         {
-            $update=profile::find($id);
+            $update = Profile::where('userid', $userid)->first();
             $update->userid=$userid;
             $update->name=$name;
             $update->phone=$phone;
@@ -154,7 +154,7 @@ class profileController extends Controller
         }
         else if($image=="" && $image1=="")
         {
-            $update=profile::find($id);
+            $update = Profile::where('userid', $userid)->first();
             $update->userid=$userid;
             $update->name=$name;
             $update->phone=$phone;
@@ -167,6 +167,15 @@ class profileController extends Controller
             echo "Data Updated";
         }
     }
+    public function updateprofile($Id)
+    {
+        $profile = profile::where('userid','=', $Id)->first();    
+        return response()->json($profile);
+    }
+
+  
+
+
 
     /**
      * Remove the specified resource from storage.

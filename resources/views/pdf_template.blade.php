@@ -19,7 +19,6 @@
       <h1>Your Registration Details</h1>
 <p>Username: {{ $username }}</p>
 <p>Email: {{ $email }}</p>
-<p>Contact: {{ $contact }}</p>
 <p>Password: {{ $password }}</p> <!-- Display the password as-is -->
 
         <!-- You can add more dynamic content here as needed -->

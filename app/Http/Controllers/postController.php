@@ -7,6 +7,8 @@ use App\Models\user;
 use App\Models\post;
 use App\Models\likes;
 use App\Models\tags;
+use App\Models\comment;
+use App\Models\profile;
 use DB;
 
 class postController extends Controller
@@ -49,14 +51,41 @@ class postController extends Controller
         // return response($hashtags);
 
 
+        // $filename = [];
+        // foreach($request->file('photopath') as $image)
+        // {
+        //     $imgname = $image->getClientOriginalName();
+        //     $image->move(public_path().'/img/',$imgname);
+        //     $filename[] = $imgname;
+        // }
+        // $images = json_encode($filename);
+
+
+
+
+        $maxFileSize = 2097152; // 2 MB in bytes
+        $uploadedFiles = $request->file('photopath');
+    
+        foreach ($uploadedFiles as $image) {
+            if ($image->getSize() > $maxFileSize) {
+                return response()->json(['error' => 'File size exceeds the allowed limit.']);
+            }
+        }
+    
         $filename = [];
-        foreach($request->file('photopath') as $image)
-        {
+    
+        foreach ($uploadedFiles as $image) {
             $imgname = $image->getClientOriginalName();
-            $image->move(public_path().'/img/',$imgname);
+            $image->move(public_path().'/img/', $imgname);
             $filename[] = $imgname;
         }
+    
         $images = json_encode($filename);
+
+
+
+
+
 
         $filename1 = [];
         // foreach($request->file('thumbnail') as $image1)
@@ -227,4 +256,149 @@ class postController extends Controller
 
         return response()->json(['posts' => $userPosts]);
     }
+
+    public function fetchuser($Id){
+        $user = user::find($Id);
+
+        return response()->json($user);
+    }
+
+
+ 
+    public function getLikedPosts($Id)
+    {
+        $userPosts = DB::table('likes')
+            ->join('posts', 'posts.id', '=', 'likes.post_id')
+            ->select('*', 'likes.id as lid')
+            ->where('likes.user_id','=', $Id)
+            ->get();
+
+            return response()->json($userPosts);
+    }
+
+    // public function getCommentsPosts($id)
+    // {
+    //     $userPosts = DB::table('users')
+    //         ->join('comments', 'users.id', '=', 'comments.userid')
+    //         ->select('*')
+    //         ->where('users.id','=', $id)
+    //         ->get();
+
+    //     return response()->json(['posts' => $userPosts]);
+    // }
+
+    public function getCommentsPosts($Id)
+    {
+        $userPosts = DB::table('comments')
+            ->join('posts', 'posts.id', '=', 'comments.postid')
+            ->select('*', 'comments.id as lid')
+            ->where('comments.userid','=', $Id)
+            ->get();
+
+            return response()->json($userPosts);
+    }
+
+    public function deletelike($Id){
+        $like = likes::find($Id);
+        $like->delete();
+        return response()->json($data['status']="success");
+    }
+
+    public function deletecomment($Id)
+    {
+        $comment = comment::find($Id);
+        $comment->delete();
+        return response()->json($data['status']="success");
+    }
+
+    public function fetchtags()
+    {
+        $tags = tags::orderBy('total_posts', 'desc')
+                    ->take(6)
+                    ->distinct()
+                    ->get();
+        return response()->json($tags);
+    }
+    
+    // public function separatetag($Id)
+    // {
+    //     $posts = DB::table('posts')
+    //     ->join('tags', 'posts.tags', '=', 'tags.total_posts')
+    //     ->select('posts.*', 'tags.total_posts')
+    //     ->get();
+    
+    //     return response()->json($posts);
+    // }
+
+     //    $authorpost = post::where('userid','=',$Id)->get();
+    //    return response()->json($authorpost);
+
+
+
+    public function authorpost($userid)
+    {
+   
+
+    // $data = DB::table('profiles')
+    // ->join('posts', 'profiles.userid', '=', 'posts.userid')
+    // ->where('profiles.userid', $userid)
+    // ->select('profiles.image', 'profiles.banner')
+    // ->first();
+
+    $data = profile::where('userid', '=', $userid)->first();
+
+$authorpost = post::where('userid', $userid)->get();
+
+return response()->json(['profileAndPosts' => $data, 'authorPosts' => $authorpost]);
+    }
+
+
+
+
+
+    public function countComment($postId)
+{
+    $commentCount = DB::table('comments')
+        ->where('postid', $postId)
+        ->count();
+
+    return $commentCount;
+}
+
+    public function fetchtagposts(Request $request){
+
+        $tag = $request->get('tag');
+
+        $posts = post::get();
+
+        $tagPosts = array();
+
+        foreach($posts as $p){
+            if( in_array($tag, json_decode($p->tags))){
+                array_push($tagPosts, $p);
+            }
+        }
+
+    return response()->json($tagPosts);
+    }
+
+
+
+    public function searchByUsername(Request $request)
+    {
+    $search = $request->input('username');
+    
+        $users = User::where('username', 'LIKE', $search . '%')->get();
+    
+        $tags = tags::where('name', 'LIKE', $search . '%')->get();
+    
+        $results = [
+            'users' => $users,
+            'tags' => $tags,
+        ];
+    
+        return response()->json($results);
+    }
+
+
 }

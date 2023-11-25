@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('description');
             $table->string('tags');
             $table->string('photopath');
-            $table->string('thumbnail');
+            $table->string('comments');
             $table->string('active');
             $table->string('likes');
             $table->timestamps();

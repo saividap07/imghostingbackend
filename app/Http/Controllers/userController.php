@@ -110,12 +110,12 @@ class userController extends Controller
 
 
 
+
 public function store_register(Request $request)
 {
     $validator = Validator::make($request->all(), [
         'username' => 'required',
         'email' => 'required|email',
-        'contact' => 'required',
         'password' => 'required',
         'confirm_password' => 'required|same:password',
     ]);
@@ -125,8 +125,10 @@ public function store_register(Request $request)
     }
 
     if (User::where('email', $request->email)->exists()) {
-        return response()->json(['error' => 'Email already registered'], 407);
+        \Log::info('Email already registered: ' . $request->email);
+        return response()->json(['errormail' => 'Email already registered'], 407);
     }
+    
 
     $input = $request->all();
     $password = $input['password'];
@@ -134,7 +136,7 @@ public function store_register(Request $request)
     $user = User::create($input);
 
     $profile = new Profile([
-        'name' => $request->name,
+        'name' => $user->username,
         'email' => $request->email,
         'userid' => $user->id,
     ]);
@@ -150,7 +152,6 @@ public function store_register(Request $request)
     PDF::loadView('pdf_template', [
         'username' => $input['username'],
         'email' => $input['email'],
-        'contact' => $input['contact'],
         'password' => $password,
     ])->save($pdfPath);
 
@@ -202,7 +203,7 @@ $user->update();
              return response()->json(['message' => 'success','token' => $token,'uid'=>$user_details->id,'username'=>$user_details->username], 200);
          }
 
-         return response()->json(['message' => 'failed'], 401);
+         return response()->json(['message' => 'Email or password is incorrect'], 401);
      }
 
 

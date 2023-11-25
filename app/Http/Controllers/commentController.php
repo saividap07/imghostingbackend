@@ -46,6 +46,12 @@ class commentController extends Controller
             'text'=>$text
         ]);
         $comment->save();
+
+        $post = post::find($post_id);
+
+        $post->comments += 1;
+
+        $post->update();
         echo "Data Insert";
     }
 
@@ -88,7 +94,17 @@ class commentController extends Controller
     public function destroy(string $id)
     {
         $comment=comment::find($id);
+        $post_id = $comment->post_id;
+
+        $post = post::find($post_id);
+
+        $post->comments -= 1;
+
+        $post->update();
+
         $comment->delete();
+
+        
         echo "Record Deleted";
     }
 
@@ -108,6 +124,12 @@ class commentController extends Controller
             ]);
 
             $newComment->save();
+
+            $post = post::find($post_id);
+
+            $post->comments = $post->comments+1;
+
+            $post->update();
     
             $data['status']='success';
 
