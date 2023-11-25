@@ -21,42 +21,64 @@ use App\Http\Controllers\profileController;
 */
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('post',postController::class);
+   
+
+ 
+ Route::post('addcomment',[commentController::class,'addcomment']);
+
+    Route::post('like',[postController::class,'like']);
+    Route::post('fetchlikes',[postController::class,'fetchlikes']);
+    Route::apiResource('comment',commentController::class);
+  
+
+
 
 });
+    Route::get('getPostsForUser/{userId}',[postController::class,'getPostsForUser']);
+  
+ Route::apiResource('post',postController::class);
+  Route::apiResource('user',userController::class);
 
-Route::apiResource('user',userController::class);
-Route::apiResource('comment',commentController::class);
-Route::apiResource('profile',profileController::class);
-Route::post('register',[userController::class,'store_register']);
-Route::post('login',[userController::class,'login']);
-Route::post('logout',[userController::class,'logout']);
-Route::post('like',[postController::class,'like']);
-Route::post('fetchlikes',[postController::class,'fetchlikes']);
-
-Route::post('addcomment',[commentController::class,'addcomment']);
-Route::post('fetchcomments',[commentController::class,'fetchcomments']);
-Route::get('fetchuser/{Id}',[postController::class,'fetchuser']);
-Route::get('/verify-email/{token}', [userController::class,'verifyEmail'])->name('email.verify');
-Route::get('getPostsForUser/{userId}',[postController::class,'getPostsForUser']);
-
-Route::post('deletelike/{Id}',[postController::class,'deletelike']);
-
+    Route::post('fetchcomments',[commentController::class,'fetchcomments']);
+    Route::get('fetchuser/{Id}',[postController::class,'fetchuser']);    
+    Route::get('getLikedPosts/{Id}',[postController::class,'getLikedPosts']);
+    Route::get('getCommentsPosts/{Id}',[postController::class,'getCommentsPosts']);
+    Route::post('deletecomment/{Id}',[postController::class,'deletecomment']);
+    Route::get('fetchtags',[postController::class,'fetchtags']);
+    Route::get('separatetag/{Id}',[postController::class,'separatetag']);
+    Route::get('authorpost/{userid}',[postController::class,'authorpost']);
+    Route::get('countcomment/{userid}',[postController::class,'countcomment']);
+    Route::post('fetchtagposts', [postController::class,'fetchtagposts']);
+    Route::post('deletelike/{Id}',[postController::class,'deletelike']);
 
 
-Route::get('getLikedPosts/{Id}',[postController::class,'getLikedPosts']);
-Route::get('getCommentsPosts/{Id}',[postController::class,'getCommentsPosts']);
 
-Route::post('deletecomment/{Id}',[postController::class,'deletecomment']);
-Route::get('fetchtags',[postController::class,'fetchtags']);
-Route::get('separatetag/{Id}',[postController::class,'separatetag']);
+
+
+
+
+
+
+
+
 
 
 Route::get('updateprofile/{Id}',[profileController::class,'updateprofile']);
-Route::get('authorpost/{userid}',[postController::class,'authorpost']);
 
-Route::get('countcomment/{userid}',[postController::class,'countcomment']);
+Route::apiResource('profile',profileController::class);
 
-Route::post('fetchtagposts', [postController::class,'fetchtagposts']);
+Route::post('register',[userController::class,'store_register']);
+Route::post('login',[userController::class,'login']);
+Route::post('logout',[userController::class,'logout']);
+
+
+
+Route::get('/verify-email/{token}', [userController::class,'verifyEmail'])->name('email.verify');
+
+
+
+
+
+
 
 Route::post('searchByUsername',[postController::class,'searchByUsername']);
